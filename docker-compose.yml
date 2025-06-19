@@ -308,6 +308,32 @@ services:
     ports:
       - "${POSTGRES_HOST_PORT:-5438}:5432"
 
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: services/telegram-bot/Dockerfile
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - API_GATEWAY_URL=http://api-gateway:8000
+      - ADMIN_API_URL=http://admin-api:8001
+      - ADMIN_API_TOKEN=${ADMIN_API_TOKEN}
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/vexa
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      api-gateway:
+        condition: service_started
+      admin-api:
+        condition: service_started
+    networks:
+      - vexa_default
+    restart: unless-stopped
+
 volumes:
   redis-data:
   postgres-data:
